@@ -6,6 +6,7 @@ const appointmentRoute = require('./routes/appointmentRoute');
 const adminRoute = require('./routes/adminRoute');
 const publicRoutes = require('./routes/publicRoute')
 const webhookRoutes = require('./routes/webhookRoute')
+const paypalRoute = require('./routes/paypalRoute')
 
 const Hit = require('./models/hitModel');
 
@@ -36,7 +37,7 @@ const limiter = rateLimit({
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
     if (skipRateLimitOnHealthCheck(req)) {
-      next();
+      return res.send('ok');
     } else {
       limiter(req, res, next);
     }
@@ -111,7 +112,7 @@ app.use('/api/public', publicRoutes);
 app.use('/api/customer', customerRoute);
 app.use('/api/appointment', appointmentRoute);
 app.use('/api/admin', adminRoute);
-
+app.use("/api/paypal", paypalRoute)
 
 app.all('*', (req, res, next) => {
   return res.status(204).end();
