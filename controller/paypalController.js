@@ -1,16 +1,69 @@
 const catchAsync = require('../utils/catchAsync');
 const { v4: uuid } = require("uuid");
+const { createAppointmentIntent, getAppointmentIntent, updateAppointmentDB, sendAppointmentMails } = require('./appointmentController');
 
 
 exports.create_paypal_order = (catchAsync(async (req, res, next) => {
 
-    const order = await createPaypalOrder(req, res);
+    get_paypal_access_token()
+        .then(access_token => {
+            console.log(`New access token - ${access_token}`)
+
+            let order_data_json = {
+                "intent": req.body.intent,
+                "purchase_units": [
+                    {
+                        "amount": {
+                            "currency_code": "USD",
+                            "value": req.body.amount
+                        }
+                    }]
+            }
+            const data = JSON.stringify(order_data_json);
+
+            fetch(process.env.PAYPAL_ENDPOINT + "/v2/checkout/orders", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + access_token
+                },
+                body: data
+            })
+                .then(res => res.json())
+                .then(json => {
+                    console.log(`JSON response from paypal - ${JSON.stringify(json)}`);
+
+                    if (json.id) {
+                        console.log(`Order ID - ${json.id}`);
+                        createAppointmentIntent(req.body.userData, "PAYPAL", json.orderID)
+                        return res.json({ status: 200, id: json.id })
+                    } // order id is successful
+                    else{
+                        console.log("NO orderid receievd from create-orderid");
+                        throw new Error(json)
+                    }
+                })
+
+        })
+        .catch(err => {
+            console.log(err)
+            res.status(500).send(err)
+        })
 
 }));
 
 exports.capture_paypal_transaction = (catchAsync(async (req, res, next) => {
-    console.log(`ORDER COMPLETED` + req.body)
-    return res.json(req.body)
+    console.log(`ORDER SUCCESS` + JSON.stringify(req.body))
+    let appointment = await getAppointmentIntent(req.body.orderID)
+    if (appointment) {
+        console.log("Captturing, apt found", appointment)
+    } else {
+        console.log("Captturing, apt not found")
+
+    }
+    let appt = await updateAppointmentDB(appointment, req.body)
+    // sendAppointmentMails(appt)
+    res.json({ status: 200, message: "Order captured successfully" })
 }));
 
 function get_paypal_access_token() {
@@ -27,41 +80,4 @@ function get_paypal_access_token() {
         .then(res => res.json())
         .then(json => { return json.access_token })
 
-}
-
-
-function createPaypalOrder(req, res) {
-    get_paypal_access_token()
-        .then(access_token => {
-            console.log(`New access token - ${access_token}`)
-
-            let order_data_json = {
-                "intent": "CAPTURE",
-                "purchase_units": [
-                    {
-                        "amount": {
-                            "currency_code": "USD",
-                            "value": "8.01"
-                        }
-                    }
-                ]
-            }
-            const data = JSON.stringify(order_data_json);
-
-            fetch(process.env.PAYPAL_ENDPOINT + "/v2/checkout/orders", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + access_token
-                },
-                body: data
-            })
-                .then(res => res.json())
-                .then(json => { res.send(json) })
-
-        })
-        .catch(err => {
-            console.log(err)
-            res.status(500).send(err)
-        })
 }

@@ -7,7 +7,7 @@ const stripe = require('stripe')(process.env.STRIPE_TOKEN);
 const { template_customer_message } = require('../utils/email_templates/template_customer');
 const { template_team_message } = require('../utils/email_templates/template_team');
 
-async function appointmentConfirmed(appointment) {
+exports.sendAppointmentMails = async (appointment) => {
 
   // send the appointment confirmation mail to the customer.
   await email.sendEmailPlain({
@@ -26,6 +26,47 @@ async function appointmentConfirmed(appointment) {
 
 }
 
+exports.createAppointmentIntent = async (appointment, payment_option, appointment_id) => {
+  try {
+    const appointmentDoc = await Appointment.create({ ...appointment, payment_option, appointment_id });
+
+    const customerDoc = await Customer.create({ ...appointment, payment_option, appointment_id });
+
+    return { appointmentDoc, customerDoc };
+  } catch (error) {
+    console.error("Error occurred while saving appointment and customer:", error);
+    throw error; // Optionally rethrow the error to handle it at a higher level
+  }
+};
+
+exports.updateAppointmentDB = async (appointment, customer_details) => {
+  /**
+   * Update the appointment with the customer details.
+   * 
+   * @param {Object} appointment - The appointment object.
+   * @param {Object} customer_details - The customer details object.
+   * 
+   */
+  appointment.paid = true;
+  appointment.customer_details = customer_details;
+
+  let doc = await appointment.save();
+  return doc
+}
+
+exports.getAppointmentIntent = async (appointment_id) => {
+  /**
+  *  Get the appointment object by the appointment_id.
+  * 
+  * @param {String} appointment_id - The appointment_id.
+  * 
+  * 
+  */
+  return await Appointment.findOne({
+    appointment_id
+  });
+
+}
 
 exports.createCheckoutSession = catchAsync(async (req, res, next) => {
   const YOUR_DOMAIN = process.env.NODE_ENV == "production" ? process.env.FRONTEND_HOST_LIVE : process.env.FRONTEND_HOST_TEST;
@@ -47,14 +88,7 @@ exports.createCheckoutSession = catchAsync(async (req, res, next) => {
     cancel_url: `${YOUR_DOMAIN}/failure`,
   });
 
-  appointment_body.appointment_id = session.id;
-  appointment_body.pmc_details = session.payment_method_configuration_details.id;
-
-  const doc = await Appointment.create(appointment_body);
-  const customer = await Customer.create(appointment_body);
-  // console.log("Saved Appointment", doc);
-  // console.log("Saved Customer", customer);
-
+  await exports.createAppointmentIntent(appointment_body, "STRIPE", session.id);
 
   return res.json({
     status: 200,
@@ -65,8 +99,6 @@ exports.createCheckoutSession = catchAsync(async (req, res, next) => {
 });
 
 exports.webhook = (req, res) => {
-
-
 
   const sig = req.headers['stripe-signature'];
   const endpointSecret = process.env.NODE_ENV == "production" ? process.env.STRIPE_WEBHOOK_SECRET_STAGE : process.env.STRIPE_WEBHOOK_SECRET_LOCAL
@@ -106,14 +138,12 @@ exports.webhook = (req, res) => {
       if (session.payment_status === 'paid' && !appointment.paid) {
         // Mark the appointment as paid
         // send the mail
-        appointment.paid = true;
-        appointment.customer_details = session.customer_details;
-        appointmentConfirmed(appointment);
-        await appointment.save();
+        exports.sendAppointmentMails(appointment);
+        let doc = exports.updateAppointmentDB(appointment, session.customer_details)
 
-        console.log('Appointment marked as paid:', appointment);
+        console.log('Appointment finalised:', doc);
       } else {
-        console.log('Appointment already marked as paid:', appointment);
+        console.log('Appointment already marked as paid, so no email will be sent', appointment);
       }
     } catch (error) {
       console.error('Error handling checkout session completed:', error);

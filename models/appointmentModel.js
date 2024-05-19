@@ -5,9 +5,8 @@ const appointmentSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  age: {
-    type: Number,
-    trim: true,
+  payment_option: {
+    type: String,
   },
   appointment_id: {
     type: String,
