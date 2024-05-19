@@ -23,7 +23,7 @@ exports.sendAppointmentMails = async (appointment) => {
     message: template_team_message(appointment),
     replyTo: appointment.email
   });
-
+  console.log("Emails sent successfully");
 }
 
 exports.createAppointmentIntent = async (appointment, payment_option, appointment_id) => {
