@@ -139,7 +139,7 @@ exports.webhook = (req, res) => {
         // Mark the appointment as paid
         // send the mail
         exports.sendAppointmentMails(appointment);
-        let doc = exports.updateAppointmentDB(appointment, session.customer_details)
+        let doc = await exports.updateAppointmentDB(appointment, session.customer_details)
 
         console.log('Appointment finalised:', doc);
       } else {

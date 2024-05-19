@@ -62,7 +62,7 @@ exports.capture_paypal_transaction = (catchAsync(async (req, res, next) => {
 
     }
     let appt = await updateAppointmentDB(appointment, req.body)
-    sendAppointmentMails(appt)
+    await sendAppointmentMails(appt)
     res.json({ status: 200, message: "Order captured successfully" })
 }));
 
