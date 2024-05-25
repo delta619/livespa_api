@@ -36,7 +36,7 @@ exports.create_paypal_order = (catchAsync(async (req, res, next) => {
                         createAppointmentIntent(req.body.userData, "PAYPAL", json.id)
                         return res.json({ status: 200, id: json.id })
                     } // order id is successful
-                    else{
+                    else {
                         console.log("NO orderid receievd from create-orderid");
                         throw new Error(json)
                     }
@@ -57,10 +57,9 @@ exports.capture_paypal_transaction = (catchAsync(async (req, res, next) => {
         console.log("Captturing, apt found", appointment)
     } else {
         console.log("Captturing, apt not found")
-        return next("Something went wrong with ", JSON.stringify(req.body))
     }
-    await sendAppointmentMails(appt)
     let appt = await updateAppointmentDB(appointment, req.body)
+    await sendAppointmentMails(appt)
     res.json({ status: 200, message: "Order captured successfully" })
 }));
 
