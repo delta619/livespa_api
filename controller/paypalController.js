@@ -31,11 +31,9 @@ exports.create_paypal_order = (catchAsync(async (req, res, next) => {
             })
                 .then(res => res.json())
                 .then(json => {
-                    console.log(`JSON response from paypal - ${JSON.stringify(json)}`);
 
                     if (json.id) {
-                        console.log(`Order ID - ${json.id}`);
-                        createAppointmentIntent(req.body.userData, "PAYPAL", json.orderID)
+                        createAppointmentIntent(req.body.userData, "PAYPAL", json.id)
                         return res.json({ status: 200, id: json.id })
                     } // order id is successful
                     else{
@@ -54,15 +52,15 @@ exports.create_paypal_order = (catchAsync(async (req, res, next) => {
 
 exports.capture_paypal_transaction = (catchAsync(async (req, res, next) => {
     console.log(`ORDER SUCCESS` + JSON.stringify(req.body))
-    let appointment = await getAppointmentIntent(req.body.orderID)
+    let appointment = await getAppointmentIntent(req.body.orderId)
     if (appointment) {
         console.log("Captturing, apt found", appointment)
     } else {
         console.log("Captturing, apt not found")
-
+        return next("Something went wrong with ", JSON.stringify(req.body))
     }
-    let appt = await updateAppointmentDB(appointment, req.body)
     await sendAppointmentMails(appt)
+    let appt = await updateAppointmentDB(appointment, req.body)
     res.json({ status: 200, message: "Order captured successfully" })
 }));
 

@@ -29,10 +29,10 @@ exports.sendAppointmentMails = async (appointment) => {
 exports.createAppointmentIntent = async (appointment, payment_option, appointment_id) => {
   try {
     const appointmentDoc = await Appointment.create({ ...appointment, payment_option, appointment_id });
+    console.log("appointment_id", appointment_id);
+    console.log("Appointment intent created successfully", appointmentDoc);
+    return appointmentDoc;
 
-    const customerDoc = await Customer.create({ ...appointment, payment_option, appointment_id });
-
-    return { appointmentDoc, customerDoc };
   } catch (error) {
     console.error("Error occurred while saving appointment and customer:", error);
     throw error; // Optionally rethrow the error to handle it at a higher level
@@ -51,6 +51,7 @@ exports.updateAppointmentDB = async (appointment, customer_details) => {
   appointment.customer_details = customer_details;
 
   let doc = await appointment.save();
+  console.log("Appointment updated successfully", doc);
   return doc
 }
 
