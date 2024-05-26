@@ -2,9 +2,7 @@ const catchAsync = require('../utils/catchAsync');
 const { v4: uuid } = require("uuid");
 const { createAppointmentIntent, getAppointmentIntent, updateAppointmentDB, sendAppointmentMails } = require('./appointmentController');
 
-
-exports.create_paypal_order = (catchAsync(async (req, res, next) => {
-
+exports.create_paypal_order = catchAsync(async (req, res, next) => {
     get_paypal_access_token()
         .then(access_token => {
             console.log(`New access token - ${access_token}`)
@@ -31,37 +29,56 @@ exports.create_paypal_order = (catchAsync(async (req, res, next) => {
             })
                 .then(res => res.json())
                 .then(json => {
-
                     if (json.id) {
                         createAppointmentIntent(req.body.userData, "PAYPAL", json.id)
                         return res.json({ status: 200, id: json.id })
-                    } // order id is successful
-                    else {
-                        console.log("NO orderid receievd from create-orderid");
+                    } else {
+                        console.log("NO orderid received from create-orderid");
                         throw new Error(json)
                     }
                 })
-
         })
         .catch(err => {
             console.log(err)
             res.status(500).send(err)
         })
+});
 
-}));
+exports.capture_paypal_transaction = catchAsync(async (req, res, next) => {
+    let appointment;
+    get_paypal_access_token()
+        .then(async access_token => {
+            return fetch(`${process.env.PAYPAL_ENDPOINT}/v2/checkout/orders/${req.body.orderId}/capture`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${access_token}`
+                }
+            }).then(res => res.json())
+                .then(async json => {
+                    console.log("Capture response", json)
+                    appointment = await getAppointmentIntent(req.body.orderId)
+                    if (appointment) {
+                        console.log("Capturing, appointment found", appointment)
+                    } else {
+                        console.log("Capturing, appointment not found")
+                    }
+                    let appt = await updateAppointmentDB(appointment, req.body)
+                    await sendAppointmentMails(appt)
+                    return res.json({ status: 200, message: "Order captured successfully" })
 
-exports.capture_paypal_transaction = (catchAsync(async (req, res, next) => {
-    console.log(`ORDER SUCCESS` + JSON.stringify(req.body))
-    let appointment = await getAppointmentIntent(req.body.orderId)
-    if (appointment) {
-        console.log("Captturing, apt found", appointment)
-    } else {
-        console.log("Captturing, apt not found")
-    }
-    let appt = await updateAppointmentDB(appointment, req.body)
-    await sendAppointmentMails(appt)
-    res.json({ status: 200, message: "Order captured successfully" })
-}));
+                })
+                .catch(err => {
+                    console.log(err)
+                    return res.status(500).send({ status: 500, error: "Error capturing order" })
+                })
+        })
+        .catch(err => {
+            console.log(err)
+            res.status(500).send({ status: 500, error: "Error oauth" })
+        })
+
+});
 
 function get_paypal_access_token() {
     const auth = `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
@@ -76,5 +93,4 @@ function get_paypal_access_token() {
     })
         .then(res => res.json())
         .then(json => { return json.access_token })
-
 }
