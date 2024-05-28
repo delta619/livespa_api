@@ -19,7 +19,7 @@ exports.sendAppointmentMails = async (appointment) => {
   // send the customer details to the LiveSPA team.
   await email.sendEmailPlain({
     email: 'livespabyloreto82@gmail.com',
-    subject: 'Appointment Booked!',
+    subject: `Appointment Booked! | ${appointment.name}`,
     message: template_team_message(appointment),
     replyTo: appointment.email
   });
