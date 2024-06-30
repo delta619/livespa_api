@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 
 const hitSchema = new mongoose.Schema({
     hit:{
-        type:Number,
+        type:String,
         
     },
     data:{

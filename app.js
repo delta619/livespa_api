@@ -21,7 +21,7 @@ const cors = require('cors');
 const rawBody = require('raw-body');
 const path = require('path');
 // GLOBAL
-const {PintDataClass} = require('./utils/PintDataClass');
+const { PintDataClass } = require('./utils/PintDataClass');
 app.use(morgan('dev'));
 // protect
 app.use(helmet());
@@ -93,16 +93,14 @@ app.use(express.urlencoded({ extended: true }));
 // fetch initial data 
 const p = new PintDataClass()
 
-app.get('/api/addHit', async (req, res) => {
-  if (process.env.NODE_ENV == 'production') {
-    // try {
-    //   await Hit.create({
-    //     hit: 1,
-    //     data: JSON.stringify(req.headers),
-    //   });
-    // } catch (error) {
-    //   console.log(error);
-    // }
+app.post('/api/addHit', async (req, res) => {
+  try {
+    await Hit.create({
+      hit: req.body.src,
+      data: JSON.stringify(req.headers),
+    });
+  } catch (error) {
+    console.log(error);
   }
   return res.json({
     status: 200,
