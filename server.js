@@ -31,7 +31,7 @@ mongoose
   });
 
 // Test
-Server.listen(process.env.PORT || 3000, (err) => {
+Server.listen(process.env.PORT || 3001, (err) => {
   if (err) {
     console.error('Server startup error:', err);
     process.exit(1); // Exit with error code 1
