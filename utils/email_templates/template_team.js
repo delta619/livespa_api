@@ -12,6 +12,7 @@ exports.template_team_message = (appointment) => `\n\n
         Services: <strong>${appointment.services.join(", ") || "N/A"}</strong><br>
         Duration: <strong>${appointment.duration}</strong><br>
         Cabin: <strong>${appointment.cabin?appointment.cabin:"N/A"}</strong><br>
+        Amount Paid: <strong>$8</strong><br>
         Message: <strong>${appointment.message?appointment.message:"N/A"}</strong><br>
         Please prepare for their arrival.</p>
         <p style="font-size: 16px;">Let's ensure our guest has a wonderful experience!</p>
