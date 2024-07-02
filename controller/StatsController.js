@@ -27,7 +27,7 @@ exports.add_newsletter = catchAsync(async (req, res) => {
 exports.get_redis_keys = catchAsync(async (req, res) => {
     await connectRedis(); // Ensure the client is connected
 
-    ans = {}
+    let ans = {}
     const keys = await Redis_DB.keys('*')
     for (let key of keys) {
         ans[key] = await Redis_DB.get(key)
