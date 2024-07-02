@@ -6,6 +6,7 @@ const sms = require('../utils/smsService');
 const stripe = require('stripe')(process.env.STRIPE_TOKEN);
 const { template_customer_message } = require('../utils/email_templates/template_customer');
 const { template_team_message } = require('../utils/email_templates/template_team');
+const {Redis_DB, connectRedis} = require('../utils/redis');
 
 exports.sendAppointmentMails = async (appointment) => {
 
@@ -76,6 +77,20 @@ exports.createCheckoutSession = catchAsync(async (req, res, next) => {
 
   console.log("Request Body", req.body);
   const appointment_body = { ...req.body };
+
+  let prepayment = await Redis_DB.get('prepayment');
+
+  if (prepayment != 1) {
+
+    await exports.createAppointmentIntent(appointment_body, "# NO PAYMENT", "# NO ID");
+    await exports.sendAppointmentMails(appointment_body);
+    
+    return res.json({
+      status: 200,
+      url: "/success",
+    })
+
+  }
 
   const session = await stripe.checkout.sessions.create({
     line_items: [
