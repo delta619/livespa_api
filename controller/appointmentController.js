@@ -17,11 +17,13 @@ exports.sendAppointmentMails = async (appointment) => {
     message: template_customer_message(appointment)
   });
 
+    connectRedis();
+    let isPaid = await Redis_DB.get('prepayment') == '1' ? true : false;
   // send the customer details to the LiveSPA team.
   await email.sendEmailPlain({
     email: 'livespabyloreto82@gmail.com',
     subject: `Appointment Booked! | ${appointment.name}`,
-    message: template_team_message(appointment),
+    message: template_team_message(appointment, isPaid),
     replyTo: appointment.email
   });
   console.log("Emails sent successfully");

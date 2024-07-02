@@ -1,4 +1,4 @@
-exports.template_team_message = (appointment) => `\n\n
+exports.template_team_message = (appointment, isPaid) => `\n\n
 <div style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; text-align: center;">
     <div style="max-width: 600px; margin: 50px auto; padding: 20px; background-color: #ffffff; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
         <h1 style="color: #007bff; font-size: 24px;">New Reservation Received!</h1>
@@ -12,7 +12,7 @@ exports.template_team_message = (appointment) => `\n\n
         Services: <strong>${appointment.services.join(", ") || "N/A"}</strong><br>
         Duration: <strong>${appointment.duration}</strong><br>
         Cabin: <strong>${appointment.cabin?appointment.cabin:"N/A"}</strong><br>
-        Amount Paid: <strong>$8</strong><br>
+        Amount pre-Paid: <strong>${isPaid? "$8": "N/A"}</strong><br>
         Message: <strong>${appointment.message?appointment.message:"N/A"}</strong><br>
         Please prepare for their arrival.</p>
         <p style="font-size: 16px;">Let's ensure our guest has a wonderful experience!</p>
