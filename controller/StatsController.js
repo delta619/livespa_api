@@ -1,7 +1,7 @@
 const { PintDataClass } = require('../utils/PintDataClass')
 const NewsLetterModel = require('../models/newsletterModel')
 const catchAsync = require('../utils/catchAsync');
-const {Redis_DB, connectRedis} = require('../utils/redis')
+// const { Redis_DB, connectRedis } = require('../utils/redis')
 
 exports.get_status = (req, res) => {
 
@@ -25,17 +25,27 @@ exports.add_newsletter = catchAsync(async (req, res) => {
 
 
 exports.get_redis_keys = catchAsync(async (req, res) => {
-    await connectRedis(); // Ensure the client is connected
+    // await connectRedis(); // Ensure the client is connected
 
-    let ans = {}
-    const keys = await Redis_DB.keys('*')
-    for (let key of keys) {
-        ans[key] = await Redis_DB.get(key)
-    }  
-    
+    // let ans = {}
+    // const keys = await Redis_DB.keys('*')
+    // for (let key of keys) {
+    //     ans[key] = await Redis_DB.get(key)
+    // }
+
+    // return res.status(200).json({
+    //     "message": "keys fetched",
+    //     "data": ans
+    // })
+
     return res.status(200).json({
         "message": "keys fetched",
-        "data": ans
+        "data": {
+            "foo": "bar",
+            "prepayment": "0"
+        }
     })
+
+
 }
 )

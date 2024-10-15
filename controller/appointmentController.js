@@ -6,7 +6,7 @@ const sms = require('../utils/smsService');
 const stripe = require('stripe')(process.env.STRIPE_TOKEN);
 const { template_customer_message } = require('../utils/email_templates/template_customer');
 const { template_team_message } = require('../utils/email_templates/template_team');
-const {Redis_DB, connectRedis} = require('../utils/redis');
+// const {Redis_DB, connectRedis} = require('../utils/redis');
 
 exports.sendAppointmentMails = async (appointment) => {
 
@@ -17,8 +17,8 @@ exports.sendAppointmentMails = async (appointment) => {
     message: template_customer_message(appointment)
   });
 
-    connectRedis();
-    let isPaid = await Redis_DB.get('prepayment') == '1' ? true : false;
+    // connectRedis();
+    let isPaid = 0 
   // send the customer details to the LiveSPA team.
   await email.sendEmailPlain({
     email: 'livespabyloreto82@gmail.com',
@@ -80,7 +80,7 @@ exports.createCheckoutSession = catchAsync(async (req, res, next) => {
   console.log("Request Body", req.body);
   const appointment_body = { ...req.body };
 
-  let prepayment = await Redis_DB.get('prepayment');
+  let prepayment = 0 
 
   if (prepayment != 1) {
 
